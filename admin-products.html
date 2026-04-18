@@ -261,12 +261,10 @@
 
 <div class="toast" id="toast"></div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
-
-const ADMIN_PASSWORD = "stella"; // Change this!
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+const ADMIN_PASSWORD = "garagesale2024"; // Change this!
 
 const firebaseConfig = {
   apiKey: "AIzaSyBktRoKG3ELj4Gr3AWPZpD0AErIRm2R-WU",
@@ -278,14 +276,12 @@ const firebaseConfig = {
   measurementId: "G-K53XJXMXNE"
 };
 
-const fbApp = initializeApp(firebaseConfig);
-const db = getFirestore(fbApp);
-const storage = getStorage(fbApp);
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
 let products = [];
 let editingId = null;
-let uploadedImageUrl = null;
-let previewBlob = null;
+let currentBase64 = null; // stores base64 string of selected image
 
 window.doLogin = function() {
   const pass = document.getElementById("adminPass").value;
@@ -300,12 +296,12 @@ window.doLogin = function() {
 
 window.loadProducts = async function() {
   try {
-    const snap = await getDocs(collection(db, "products"));
+    const snap = await db.collection("products").get();
     products = [];
     snap.forEach(d => products.push({ id: d.id, ...d.data() }));
     renderTable();
     updateStats();
-  } catch(e) { showToast("Failed to load products", true); }
+  } catch(e) { showToast("Failed to load products: " + e.message, true); }
 };
 
 function renderTable() {
@@ -317,7 +313,9 @@ function renderTable() {
   tbody.innerHTML = products.map(p => `
     <tr>
       <td>
-        ${p.imageUrl ? `<img class="product-thumb" src="${p.imageUrl}" alt="${p.name}"/>` : `<div class="product-thumb">🏷️</div>`}
+        ${p.imageBase64
+          ? `<img class="product-thumb" src="${p.imageBase64}" alt="${p.name}"/>`
+          : `<div class="product-thumb">🏷️</div>`}
       </td>
       <td><strong>${p.name}</strong></td>
       <td style="color:#777;font-size:0.85rem;max-width:200px;">${p.description || '—'}</td>
@@ -343,14 +341,12 @@ function updateStats() {
 
 window.openAddModal = function() {
   editingId = null;
-  uploadedImageUrl = null;
-  previewBlob = null;
+  currentBase64 = null;
   document.getElementById("modalTitle").textContent = "Add Product";
   document.getElementById("pName").value = "";
   document.getElementById("pDesc").value = "";
   document.getElementById("pPrice").value = "";
   document.getElementById("pStock").value = "";
-  document.getElementById("pImageUrl").value = "";
   document.getElementById("pImageFile").value = "";
   document.getElementById("imgPreview").classList.remove("show");
   document.getElementById("productModal").classList.add("open");
@@ -364,11 +360,10 @@ window.openEditModal = function(id) {
   document.getElementById("pDesc").value = p.description || "";
   document.getElementById("pPrice").value = p.price || "";
   document.getElementById("pStock").value = p.stock !== undefined ? p.stock : "";
-  document.getElementById("pImageUrl").value = p.imageUrl || "";
-  uploadedImageUrl = p.imageUrl || null;
-  previewBlob = null;
+  document.getElementById("pImageFile").value = "";
+  currentBase64 = p.imageBase64 || null;
   const preview = document.getElementById("imgPreview");
-  if (p.imageUrl) { preview.src = p.imageUrl; preview.classList.add("show"); }
+  if (p.imageBase64) { preview.src = p.imageBase64; preview.classList.add("show"); }
   else { preview.classList.remove("show"); }
   document.getElementById("productModal").classList.add("open");
 };
@@ -377,14 +372,28 @@ window.closeModal = function() {
   document.getElementById("productModal").classList.remove("open");
 };
 
+// Resize + convert image to base64 (max 800px wide, quality 0.75)
 window.previewImage = function(e) {
   const file = e.target.files[0];
   if (!file) return;
-  previewBlob = file;
-  const url = URL.createObjectURL(file);
-  const preview = document.getElementById("imgPreview");
-  preview.src = url;
-  preview.classList.add("show");
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement("canvas");
+      const MAX = 800;
+      let w = img.width, h = img.height;
+      if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+      currentBase64 = canvas.toDataURL("image/jpeg", 0.75);
+      const preview = document.getElementById("imgPreview");
+      preview.src = currentBase64;
+      preview.classList.add("show");
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
 };
 
 window.saveProduct = async function() {
@@ -401,23 +410,21 @@ window.saveProduct = async function() {
   btn.textContent = "Saving...";
 
   try {
-    // Upload image if new one selected
-    let imageUrl = uploadedImageUrl || "";
-    if (previewBlob) {
-      const storageRef = ref(storage, `products/${Date.now()}_${previewBlob.name}`);
-      await uploadBytes(storageRef, previewBlob);
-      imageUrl = await getDownloadURL(storageRef);
-    }
-
-    const data = { name, description: desc, price, imageUrl, updatedAt: serverTimestamp() };
+    const data = {
+      name,
+      description: desc,
+      price,
+      imageBase64: currentBase64 || "",
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
     if (stock !== undefined) data.stock = stock;
 
     if (editingId) {
-      await updateDoc(doc(db, "products", editingId), data);
+      await db.collection("products").doc(editingId).update(data);
       showToast("Product updated!");
     } else {
-      data.createdAt = serverTimestamp();
-      await addDoc(collection(db, "products"), data);
+      data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection("products").add(data);
       showToast("Product added!");
     }
 
@@ -430,7 +437,7 @@ window.saveProduct = async function() {
 window.deleteProduct = async function(id) {
   if (!confirm("Delete this product?")) return;
   try {
-    await deleteDoc(doc(db, "products", id));
+    await db.collection("products").doc(id).delete();
     showToast("Product deleted");
     loadProducts();
   } catch(e) { showToast("Error deleting", true); }
