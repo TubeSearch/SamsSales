@@ -1,2 +1,695 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Garage Sale</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --blue: #0079b0;
+    --blue-light: #0096d6;
+    --blue-dark: #005a82;
+    --black: #000000;
+    --white: #ffffff;
+    --gray: #1a1a1a;
+    --gray2: #2a2a2a;
+    --gray3: #3a3a3a;
+    --text-muted: #888;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    font-family:'DM Sans',sans-serif;
+    background:var(--black);
+    color:var(--white);
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+
+  /* HERO HEADER */
+  header{
+    background:linear-gradient(135deg,#000 0%,#001f30 40%,#003d5c 70%,#0079b0 100%);
+    padding:0 20px;
+    position:sticky;
+    top:0;
+    z-index:100;
+    border-bottom:2px solid var(--blue);
+    box-shadow:0 4px 30px rgba(0,121,176,0.4);
+  }
+  .header-inner{
+    max-width:900px;
+    margin:0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    height:64px;
+  }
+  .logo{
+    font-family:'Bebas Neue',cursive;
+    font-size:2rem;
+    letter-spacing:3px;
+    background:linear-gradient(90deg,#fff,#0079b0);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
+  .cart-btn{
+    position:relative;
+    background:none;
+    border:2px solid var(--blue);
+    border-radius:12px;
+    padding:10px 18px;
+    color:var(--white);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-family:'DM Sans',sans-serif;
+    font-size:0.95rem;
+    font-weight:500;
+    transition:all 0.2s;
+    backdrop-filter:blur(10px);
+    background:rgba(0,121,176,0.15);
+  }
+  .cart-btn:hover{background:rgba(0,121,176,0.35);transform:translateY(-1px);}
+  .cart-count{
+    position:absolute;
+    top:-8px;right:-8px;
+    background:var(--blue);
+    color:#fff;
+    border-radius:50%;
+    width:22px;height:22px;
+    font-size:0.7rem;
+    font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+    opacity:0;transform:scale(0);
+    transition:all 0.2s;
+  }
+  .cart-count.visible{opacity:1;transform:scale(1);}
+
+  /* BANNER */
+  .banner{
+    background:linear-gradient(135deg,#001f30,#003d5c,#0079b0,#003d5c,#001f30);
+    background-size:400% 400%;
+    animation:gradientShift 8s ease infinite;
+    padding:48px 20px 40px;
+    text-align:center;
+  }
+  @keyframes gradientShift{
+    0%{background-position:0% 50%}
+    50%{background-position:100% 50%}
+    100%{background-position:0% 50%}
+  }
+  .banner h1{
+    font-family:'Bebas Neue',cursive;
+    font-size:clamp(2.5rem,8vw,5rem);
+    letter-spacing:6px;
+    line-height:1;
+    margin-bottom:10px;
+    text-shadow:0 0 40px rgba(0,121,176,0.8);
+  }
+  .banner p{
+    color:rgba(255,255,255,0.7);
+    font-size:1rem;
+    font-weight:300;
+    letter-spacing:2px;
+    text-transform:uppercase;
+  }
+
+  /* PRODUCTS */
+  .products-section{padding:30px 20px 60px;}
+  .products-section h2{
+    text-align:center;
+    font-family:'Bebas Neue',cursive;
+    font-size:1.6rem;
+    letter-spacing:4px;
+    color:var(--blue-light);
+    margin-bottom:24px;
+  }
+  .products-grid{
+    max-width:900px;
+    margin:0 auto;
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+    gap:20px;
+  }
+  .product-card{
+    background:linear-gradient(145deg,#111,#1a1a1a);
+    border:1px solid #2a2a2a;
+    border-radius:16px;
+    overflow:hidden;
+    transition:all 0.3s;
+    position:relative;
+  }
+  .product-card:hover{
+    border-color:var(--blue);
+    transform:translateY(-4px);
+    box-shadow:0 12px 40px rgba(0,121,176,0.3);
+  }
+  .product-img{
+    width:100%;
+    aspect-ratio:4/3;
+    object-fit:cover;
+    background:linear-gradient(135deg,#1a1a1a,#2a2a2a);
+    display:block;
+  }
+  .product-img-placeholder{
+    width:100%;
+    aspect-ratio:4/3;
+    background:linear-gradient(135deg,#111,#222);
+    display:flex;align-items:center;justify-content:center;
+    font-size:3rem;
+  }
+  .product-info{padding:16px;}
+  .product-name{
+    font-weight:600;
+    font-size:1rem;
+    margin-bottom:4px;
+    line-height:1.3;
+  }
+  .product-desc{
+    font-size:0.82rem;
+    color:var(--text-muted);
+    margin-bottom:12px;
+    line-height:1.4;
+  }
+  .product-price{
+    font-family:'Bebas Neue',cursive;
+    font-size:1.5rem;
+    letter-spacing:1px;
+    color:var(--blue-light);
+    margin-bottom:14px;
+  }
+  .counter{
+    display:flex;
+    align-items:center;
+    gap:0;
+    background:#0a0a0a;
+    border:1px solid #333;
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .counter-btn{
+    background:none;
+    border:none;
+    color:var(--white);
+    width:40px;height:40px;
+    font-size:1.3rem;
+    cursor:pointer;
+    transition:background 0.2s;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:300;
+  }
+  .counter-btn:hover{background:rgba(0,121,176,0.3);}
+  .counter-btn:active{background:rgba(0,121,176,0.5);}
+  .counter-val{
+    flex:1;
+    text-align:center;
+    font-weight:600;
+    font-size:1rem;
+    min-width:40px;
+  }
+  .sold-out-badge{
+    position:absolute;
+    top:12px;right:12px;
+    background:rgba(0,0,0,0.8);
+    border:1px solid #555;
+    color:#888;
+    font-size:0.7rem;
+    font-weight:600;
+    letter-spacing:2px;
+    padding:4px 10px;
+    border-radius:20px;
+    text-transform:uppercase;
+  }
+  .loading-grid{
+    max-width:900px;
+    margin:0 auto;
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+    gap:20px;
+  }
+  .skeleton{
+    background:linear-gradient(90deg,#1a1a1a 25%,#2a2a2a 50%,#1a1a1a 75%);
+    background-size:200% 100%;
+    animation:shimmer 1.5s infinite;
+    border-radius:16px;
+    height:320px;
+  }
+  @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+  .empty-state{
+    text-align:center;
+    padding:60px 20px;
+    color:var(--text-muted);
+  }
+  .empty-state .icon{font-size:4rem;margin-bottom:16px;}
+
+  /* CART DRAWER */
+  .overlay{
+    position:fixed;inset:0;
+    background:rgba(0,0,0,0.7);
+    backdrop-filter:blur(4px);
+    z-index:200;
+    opacity:0;pointer-events:none;
+    transition:opacity 0.3s;
+  }
+  .overlay.open{opacity:1;pointer-events:all;}
+  .cart-drawer{
+    position:fixed;
+    top:0;right:0;bottom:0;
+    width:min(100vw,420px);
+    background:linear-gradient(180deg,#0d0d0d,#111);
+    border-left:1px solid #222;
+    z-index:201;
+    display:flex;flex-direction:column;
+    transform:translateX(100%);
+    transition:transform 0.35s cubic-bezier(0.4,0,0.2,1);
+    box-shadow:-20px 0 60px rgba(0,0,0,0.6);
+  }
+  .cart-drawer.open{transform:translateX(0);}
+  .cart-header{
+    padding:24px 20px 20px;
+    border-bottom:1px solid #222;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .cart-header h2{
+    font-family:'Bebas Neue',cursive;
+    font-size:1.6rem;
+    letter-spacing:3px;
+    color:var(--blue-light);
+  }
+  .close-btn{
+    background:none;border:none;
+    color:var(--text-muted);
+    font-size:1.6rem;
+    cursor:pointer;
+    padding:4px 8px;
+    border-radius:8px;
+    transition:all 0.2s;
+    line-height:1;
+  }
+  .close-btn:hover{color:var(--white);background:#222;}
+  .cart-items{
+    flex:1;
+    overflow-y:auto;
+    padding:16px 20px;
+  }
+  .cart-item{
+    display:flex;
+    gap:14px;
+    align-items:center;
+    padding:14px 0;
+    border-bottom:1px solid #1a1a1a;
+  }
+  .cart-item-img{
+    width:56px;height:56px;
+    border-radius:10px;
+    object-fit:cover;
+    background:#222;
+    flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.5rem;
+  }
+  .cart-item-info{flex:1;}
+  .cart-item-name{font-weight:600;font-size:0.9rem;margin-bottom:2px;}
+  .cart-item-price{font-size:0.82rem;color:var(--text-muted);}
+  .cart-item-subtotal{
+    font-family:'Bebas Neue',cursive;
+    font-size:1.1rem;
+    color:var(--blue-light);
+    letter-spacing:1px;
+  }
+  .cart-empty{
+    text-align:center;
+    padding:60px 20px;
+    color:var(--text-muted);
+  }
+  .cart-empty .icon{font-size:3rem;margin-bottom:12px;}
+  .cart-footer{
+    padding:20px;
+    border-top:1px solid #222;
+    background:linear-gradient(180deg,transparent,#0a0a0a);
+  }
+  .cart-total-row{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:16px;
+  }
+  .cart-total-label{font-size:0.9rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:2px;}
+  .cart-total-amount{
+    font-family:'Bebas Neue',cursive;
+    font-size:2rem;
+    color:var(--white);
+    letter-spacing:2px;
+  }
+  .checkout-btn{
+    width:100%;
+    padding:16px;
+    background:linear-gradient(135deg,var(--blue-dark),var(--blue),var(--blue-light));
+    background-size:200% 100%;
+    border:none;
+    border-radius:12px;
+    color:#fff;
+    font-family:'DM Sans',sans-serif;
+    font-size:1rem;
+    font-weight:600;
+    cursor:pointer;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    transition:all 0.3s;
+    position:relative;
+    overflow:hidden;
+  }
+  .checkout-btn:hover{background-position:right center;transform:translateY(-2px);box-shadow:0 8px 25px rgba(0,121,176,0.5);}
+  .checkout-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+
+  /* NAME MODAL */
+  .modal-overlay{
+    position:fixed;inset:0;
+    background:rgba(0,0,0,0.85);
+    backdrop-filter:blur(8px);
+    z-index:300;
+    display:flex;align-items:center;justify-content:center;
+    padding:20px;
+    opacity:0;pointer-events:none;
+    transition:opacity 0.3s;
+  }
+  .modal-overlay.open{opacity:1;pointer-events:all;}
+  .modal{
+    background:linear-gradient(145deg,#111,#1a1a1a);
+    border:1px solid #2a2a2a;
+    border-radius:20px;
+    padding:32px 28px;
+    width:100%;max-width:400px;
+    box-shadow:0 30px 80px rgba(0,0,0,0.8),0 0 0 1px rgba(0,121,176,0.2);
+    transform:translateY(20px);
+    transition:transform 0.3s;
+  }
+  .modal-overlay.open .modal{transform:translateY(0);}
+  .modal h3{
+    font-family:'Bebas Neue',cursive;
+    font-size:1.8rem;
+    letter-spacing:3px;
+    color:var(--blue-light);
+    margin-bottom:8px;
+  }
+  .modal p{font-size:0.9rem;color:var(--text-muted);margin-bottom:24px;line-height:1.5;}
+  .modal input{
+    width:100%;
+    background:#0a0a0a;
+    border:1px solid #333;
+    border-radius:10px;
+    padding:14px 16px;
+    color:#fff;
+    font-family:'DM Sans',sans-serif;
+    font-size:1rem;
+    margin-bottom:8px;
+    outline:none;
+    transition:border-color 0.2s;
+  }
+  .modal input:focus{border-color:var(--blue);}
+  .modal-actions{display:flex;gap:12px;margin-top:20px;}
+  .modal-cancel{
+    flex:1;padding:14px;
+    background:none;border:1px solid #333;
+    border-radius:10px;color:var(--text-muted);
+    font-family:'DM Sans',sans-serif;font-size:0.9rem;
+    cursor:pointer;transition:all 0.2s;
+  }
+  .modal-cancel:hover{border-color:#555;color:#fff;}
+  .modal-confirm{
+    flex:2;padding:14px;
+    background:linear-gradient(135deg,var(--blue-dark),var(--blue));
+    border:none;border-radius:10px;color:#fff;
+    font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:600;
+    cursor:pointer;transition:all 0.2s;
+    text-transform:uppercase;letter-spacing:1px;
+  }
+  .modal-confirm:hover{opacity:0.85;}
+
+  /* TOAST */
+  .toast{
+    position:fixed;
+    bottom:24px;left:50%;
+    transform:translateX(-50%) translateY(80px);
+    background:linear-gradient(135deg,#0079b0,#005a82);
+    color:#fff;
+    padding:12px 24px;
+    border-radius:100px;
+    font-size:0.9rem;
+    font-weight:500;
+    z-index:400;
+    transition:transform 0.3s;
+    white-space:nowrap;
+    box-shadow:0 8px 30px rgba(0,121,176,0.5);
+  }
+  .toast.show{transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">🏷️ Garage Sale</div>
+    <button class="cart-btn" onclick="openCart()">
+      🛒 Cart
+      <span class="cart-count" id="cartCount">0</span>
+    </button>
+  </div>
+</header>
+
+<div class="banner">
+  <h1>GARAGE SALE</h1>
+  <p>Browse · Pick · Take Home</p>
+</div>
+
+<section class="products-section">
+  <h2>— Available Items —</h2>
+  <div id="productsContainer">
+    <div class="loading-grid">
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+    </div>
+  </div>
+</section>
+
+<!-- CART DRAWER -->
+<div class="overlay" id="overlay" onclick="closeCart()"></div>
+<div class="cart-drawer" id="cartDrawer">
+  <div class="cart-header">
+    <h2>Your Cart</h2>
+    <button class="close-btn" onclick="closeCart()">✕</button>
+  </div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-footer" id="cartFooter" style="display:none;">
+    <div class="cart-total-row">
+      <span class="cart-total-label">Total</span>
+      <span class="cart-total-amount" id="cartTotal">$0.00</span>
+    </div>
+    <button class="checkout-btn" onclick="startCheckout()">Proceed to Checkout →</button>
+  </div>
+</div>
+
+<!-- NAME MODAL -->
+<div class="modal-overlay" id="nameModal">
+  <div class="modal">
+    <h3>Almost There!</h3>
+    <p>Enter your name so we know who placed this order when you come to pick up your items.</p>
+    <input type="text" id="buyerName" placeholder="Your full name" maxlength="60"/>
+    <input type="text" id="buyerNote" placeholder="Any notes? (optional)" maxlength="120"/>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-confirm" onclick="confirmCheckout()">Go to Payment →</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- FIREBASE + APP -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBktRoKG3ELj4Gr3AWPZpD0AErIRm2R-WU",
+  authDomain: "gargesale-38b84.firebaseapp.com",
+  projectId: "gargesale-38b84",
+  storageBucket: "gargesale-38b84.firebasestorage.app",
+  messagingSenderId: "915741327833",
+  appId: "1:915741327833:web:7be10523abb0eba0dd59c8",
+  measurementId: "G-K53XJXMXNE"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/4gM5kv1MsgqY9se5Kn2B200";
+
+let products = [];
+let cart = {}; // { productId: quantity }
+
+// LOAD PRODUCTS
+async function loadProducts() {
+  try {
+    const snap = await getDocs(collection(db, "products"));
+    products = [];
+    snap.forEach(doc => products.push({ id: doc.id, ...doc.data() }));
+    renderProducts();
+  } catch(e) {
+    document.getElementById("productsContainer").innerHTML = `
+      <div class="empty-state"><div class="icon">⚠️</div><p>Could not load products. Check your Firebase setup.</p></div>`;
+  }
+}
+
+function renderProducts() {
+  const container = document.getElementById("productsContainer");
+  if (!products.length) {
+    container.innerHTML = `<div class="empty-state"><div class="icon">📦</div><p>No products yet. Add some in the admin panel!</p></div>`;
+    return;
+  }
+  container.innerHTML = `<div class="products-grid">${products.map(p => productCard(p)).join("")}</div>`;
+}
+
+function productCard(p) {
+  const qty = cart[p.id] || 0;
+  const imgHtml = p.imageUrl
+    ? `<img class="product-img" src="${p.imageUrl}" alt="${p.name}" loading="lazy"/>`
+    : `<div class="product-img-placeholder">🏷️</div>`;
+  const soldOut = p.stock !== undefined && p.stock === 0;
+  return `
+    <div class="product-card" id="card-${p.id}">
+      ${imgHtml}
+      ${soldOut ? '<div class="sold-out-badge">Sold Out</div>' : ''}
+      <div class="product-info">
+        <div class="product-name">${p.name}</div>
+        ${p.description ? `<div class="product-desc">${p.description}</div>` : ''}
+        <div class="product-price">$${parseFloat(p.price).toFixed(2)}</div>
+        <div class="counter">
+          <button class="counter-btn" onclick="changeQty('${p.id}',-1)" ${soldOut?'disabled':''}>−</button>
+          <span class="counter-val" id="qty-${p.id}">${qty}</span>
+          <button class="counter-btn" onclick="changeQty('${p.id}',1)" ${soldOut?'disabled':''}>+</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+window.changeQty = function(id, delta) {
+  const product = products.find(p => p.id === id);
+  if (!product) return;
+  const cur = cart[id] || 0;
+  const next = Math.max(0, cur + delta);
+  if (next === 0) delete cart[id];
+  else cart[id] = next;
+  document.getElementById(`qty-${id}`).textContent = next;
+  updateCartCount();
+  showToast(delta > 0 ? `Added ${product.name}` : `Removed ${product.name}`);
+};
+
+function updateCartCount() {
+  const total = Object.values(cart).reduce((a,b) => a+b, 0);
+  const el = document.getElementById("cartCount");
+  el.textContent = total;
+  el.classList.toggle("visible", total > 0);
+}
+
+window.openCart = function() {
+  renderCartDrawer();
+  document.getElementById("overlay").classList.add("open");
+  document.getElementById("cartDrawer").classList.add("open");
+  document.body.style.overflow = "hidden";
+};
+
+window.closeCart = function() {
+  document.getElementById("overlay").classList.remove("open");
+  document.getElementById("cartDrawer").classList.remove("open");
+  document.body.style.overflow = "";
+};
+
+function renderCartDrawer() {
+  const items = Object.entries(cart);
+  const cartItemsEl = document.getElementById("cartItems");
+  const cartFooter = document.getElementById("cartFooter");
+
+  if (!items.length) {
+    cartItemsEl.innerHTML = `<div class="cart-empty"><div class="icon">🛒</div><p>Your cart is empty.<br/>Add some items!</p></div>`;
+    cartFooter.style.display = "none";
+    return;
+  }
+
+  let total = 0;
+  cartItemsEl.innerHTML = items.map(([id, qty]) => {
+    const p = products.find(pr => pr.id === id);
+    if (!p) return '';
+    const sub = p.price * qty;
+    total += sub;
+    const imgHtml = p.imageUrl
+      ? `<img class="cart-item-img" src="${p.imageUrl}" alt="${p.name}"/>`
+      : `<div class="cart-item-img">🏷️</div>`;
+    return `
+      <div class="cart-item">
+        ${imgHtml}
+        <div class="cart-item-info">
+          <div class="cart-item-name">${p.name}</div>
+          <div class="cart-item-price">$${p.price.toFixed(2)} × ${qty}</div>
+        </div>
+        <div class="cart-item-subtotal">$${sub.toFixed(2)}</div>
+      </div>`;
+  }).join("");
+
+  document.getElementById("cartTotal").textContent = `$${total.toFixed(2)}`;
+  cartFooter.style.display = "block";
+}
+
+window.startCheckout = function() {
+  if (!Object.keys(cart).length) return;
+  closeCart();
+  document.getElementById("nameModal").classList.add("open");
+};
+
+window.closeModal = function() {
+  document.getElementById("nameModal").classList.remove("open");
+};
+
+window.confirmCheckout = async function() {
+  const name = document.getElementById("buyerName").value.trim();
+  if (!name) { document.getElementById("buyerName").focus(); return; }
+  const note = document.getElementById("buyerNote").value.trim();
+
+  const items = Object.entries(cart).map(([id, qty]) => {
+    const p = products.find(pr => pr.id === id);
+    return { id, name: p.name, price: p.price, qty, subtotal: +(p.price * qty).toFixed(2) };
+  });
+  const total = items.reduce((a,b) => a + b.subtotal, 0);
+
+  // Save order to Firestore
+  try {
+    await addDoc(collection(db, "orders"), {
+      buyerName: name,
+      note: note || "",
+      items,
+      total: +total.toFixed(2),
+      status: "pending_payment",
+      createdAt: serverTimestamp()
+    });
+  } catch(e) { console.warn("Order save failed:", e); }
+
+  closeModal();
+  // Redirect to Stripe with prefilled amount (Stripe allows ?prefilled_amount=CENTS in some links)
+  const cents = Math.round(total * 100);
+  window.location.href = `${STRIPE_PAYMENT_LINK}?prefilled_amount=${cents}&prefilled_email=&client_reference_id=${encodeURIComponent(name)}`;
+};
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => t.classList.remove("show"), 2000);
+}
+
+loadProducts();
+</script>
+</body>
 </html>
