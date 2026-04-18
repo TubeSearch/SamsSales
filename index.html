@@ -449,7 +449,7 @@
 
 <header>
   <div class="header-inner">
-    <div class="logo">🏷️ </div>
+    <div class="logo">🏷️ Garage Sale</div>
     <button class="cart-btn" onclick="openCart()">
       🛒 Cart
       <span class="cart-count" id="cartCount">0</span>
@@ -458,7 +458,7 @@
 </header>
 
 <div class="banner">
-  <h1>3D Prints</h1>
+  <h1>GARAGE SALE</h1>
   <p>Browse · Pick · Take Home</p>
 </div>
 
@@ -508,10 +508,9 @@
 <div class="toast" id="toast"></div>
 
 <!-- FIREBASE + APP -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
 const firebaseConfig = {
   apiKey: "AIzaSyBktRoKG3ELj4Gr3AWPZpD0AErIRm2R-WU",
   authDomain: "gargesale-38b84.firebaseapp.com",
@@ -522,24 +521,23 @@ const firebaseConfig = {
   measurementId: "G-K53XJXMXNE"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
 const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/4gM5kv1MsgqY9se5Kn2B200";
 
 let products = [];
-let cart = {}; // { productId: quantity }
+let cart = {};
 
-// LOAD PRODUCTS
 async function loadProducts() {
   try {
-    const snap = await getDocs(collection(db, "products"));
+    const snap = await db.collection("products").get();
     products = [];
     snap.forEach(doc => products.push({ id: doc.id, ...doc.data() }));
     renderProducts();
   } catch(e) {
-    document.getElementById("productsContainer").innerHTML = `
-      <div class="empty-state"><div class="icon">⚠️</div><p>Could not load products. Check your Firebase setup.</p></div>`;
+    document.getElementById("productsContainer").innerHTML =
+      `<div class="empty-state"><div class="icon">⚠️</div><p>Could not load products. Check your Firebase setup.</p></div>`;
   }
 }
 
@@ -554,8 +552,8 @@ function renderProducts() {
 
 function productCard(p) {
   const qty = cart[p.id] || 0;
-  const imgHtml = p.imageUrl
-    ? `<img class="product-img" src="${p.imageUrl}" alt="${p.name}" loading="lazy"/>`
+  const imgHtml = p.imageBase64
+    ? `<img class="product-img" src="${p.imageBase64}" alt="${p.name}" loading="lazy"/>`
     : `<div class="product-img-placeholder">🏷️</div>`;
   const soldOut = p.stock !== undefined && p.stock === 0;
   return `
@@ -624,8 +622,8 @@ function renderCartDrawer() {
     if (!p) return '';
     const sub = p.price * qty;
     total += sub;
-    const imgHtml = p.imageUrl
-      ? `<img class="cart-item-img" src="${p.imageUrl}" alt="${p.name}"/>`
+    const imgHtml = p.imageBase64
+      ? `<img class="cart-item-img" src="${p.imageBase64}" alt="${p.name}"/>`
       : `<div class="cart-item-img">🏷️</div>`;
     return `
       <div class="cart-item">
@@ -663,22 +661,20 @@ window.confirmCheckout = async function() {
   });
   const total = items.reduce((a,b) => a + b.subtotal, 0);
 
-  // Save order to Firestore
   try {
-    await addDoc(collection(db, "orders"), {
+    await db.collection("orders").add({
       buyerName: name,
       note: note || "",
       items,
       total: +total.toFixed(2),
       status: "pending_payment",
-      createdAt: serverTimestamp()
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
   } catch(e) { console.warn("Order save failed:", e); }
 
   closeModal();
-  // Redirect to Stripe with prefilled amount (Stripe allows ?prefilled_amount=CENTS in some links)
   const cents = Math.round(total * 100);
-  window.location.href = `${STRIPE_PAYMENT_LINK}?prefilled_amount=${cents}&prefilled_email=&client_reference_id=${encodeURIComponent(name)}`;
+  window.location.href = `${STRIPE_PAYMENT_LINK}?prefilled_amount=${cents}&client_reference_id=${encodeURIComponent(name)}`;
 };
 
 function showToast(msg) {
