@@ -251,9 +251,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, getDocs, updateDoc, doc, orderBy, query } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
 
 const ADMIN_PASSWORD = "garagesale2024"; // Must match products page
 
@@ -267,8 +267,8 @@ const firebaseConfig = {
   measurementId: "G-K53XJXMXNE"
 };
 
-const fbApp = initializeApp(firebaseConfig);
-const db = getFirestore(fbApp);
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
 let allOrders = [];
 let filtered = [];
@@ -285,8 +285,7 @@ window.doLogin = function() {
 
 window.loadOrders = async function() {
   try {
-    const q = query(collection(db, "orders"), orderBy("createdAt","desc"));
-    const snap = await getDocs(q);
+    const snap = await db.collection("orders").orderBy("createdAt","desc").get();
     allOrders = [];
     snap.forEach(d => allOrders.push({ id: d.id, ...d.data() }));
     filterOrders();
@@ -294,7 +293,7 @@ window.loadOrders = async function() {
   } catch(e) {
     // Try without orderBy if index not built yet
     try {
-      const snap2 = await getDocs(collection(db, "orders"));
+      const snap2 = await db.collection("orders").get();
       allOrders = [];
       snap2.forEach(d => allOrders.push({ id: d.id, ...d.data() }));
       allOrders.sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
@@ -399,7 +398,7 @@ window.updateStatus = async function() {
   if (!activeOrderId) return;
   const status = document.getElementById("newStatus").value;
   try {
-    await updateDoc(doc(db, "orders", activeOrderId), { status });
+    await db.collection("orders").doc(activeOrderId).update({ status });
     const o = allOrders.find(x => x.id === activeOrderId);
     if (o) o.status = status;
     filterOrders();
