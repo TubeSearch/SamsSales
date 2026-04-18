@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin — Products</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --blue:#0079b0;--blue-light:#0096d6;--blue-dark:#005a82;
+    --black:#000;--white:#fff;--gray:#111;--gray2:#1a1a1a;--gray3:#2a2a2a;
+    --text-muted:#777;--success:#22c55e;--danger:#ef4444;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'DM Sans',sans-serif;background:#090909;color:var(--white);min-height:100vh;}
+
+  /* SIDEBAR LAYOUT */
+  .layout{display:flex;min-height:100vh;}
+  .sidebar{
+    width:220px;flex-shrink:0;
+    background:linear-gradient(180deg,#000,#0a1520);
+    border-right:1px solid #1a1a1a;
+    display:flex;flex-direction:column;
+    position:fixed;top:0;left:0;bottom:0;
+    z-index:10;
+  }
+  .sidebar-logo{
+    padding:24px 20px 20px;
+    border-bottom:1px solid #1a1a1a;
+    font-family:'Bebas Neue',cursive;
+    font-size:1.4rem;
+    letter-spacing:3px;
+    background:linear-gradient(90deg,#fff,#0079b0);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  }
+  .sidebar-label{padding:20px 20px 8px;font-size:0.7rem;letter-spacing:3px;color:var(--text-muted);text-transform:uppercase;}
+  .sidebar-link{
+    display:flex;align-items:center;gap:12px;
+    padding:12px 20px;
+    color:var(--text-muted);
+    text-decoration:none;
+    font-size:0.9rem;
+    font-weight:500;
+    border-left:3px solid transparent;
+    transition:all 0.2s;
+  }
+  .sidebar-link:hover,.sidebar-link.active{color:var(--white);border-left-color:var(--blue);background:rgba(0,121,176,0.1);}
+  .sidebar-link.active{color:var(--blue-light);}
+  .main{margin-left:220px;padding:32px;flex:1;}
+
+  /* TOPBAR */
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;}
+  .topbar h1{font-family:'Bebas Neue',cursive;font-size:2.2rem;letter-spacing:4px;color:var(--blue-light);}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:11px 22px;border-radius:10px;
+    font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:600;
+    cursor:pointer;border:none;transition:all 0.2s;
+    text-transform:uppercase;letter-spacing:1px;
+  }
+  .btn-primary{background:linear-gradient(135deg,var(--blue-dark),var(--blue));color:#fff;}
+  .btn-primary:hover{opacity:0.85;transform:translateY(-1px);}
+  .btn-danger{background:rgba(239,68,68,0.15);color:var(--danger);border:1px solid rgba(239,68,68,0.3);}
+  .btn-danger:hover{background:rgba(239,68,68,0.25);}
+  .btn-ghost{background:#1a1a1a;color:var(--text-muted);border:1px solid #2a2a2a;}
+  .btn-ghost:hover{color:#fff;border-color:#444;}
+  .btn-sm{padding:7px 14px;font-size:0.8rem;}
+
+  /* STATS ROW */
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px;}
+  .stat-card{
+    background:linear-gradient(145deg,#111,#161616);
+    border:1px solid #222;border-radius:14px;padding:20px;
+  }
+  .stat-label{font-size:0.75rem;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px;}
+  .stat-val{font-family:'Bebas Neue',cursive;font-size:2rem;letter-spacing:2px;color:var(--blue-light);}
+
+  /* PRODUCTS TABLE */
+  .card{background:linear-gradient(145deg,#111,#161616);border:1px solid #222;border-radius:16px;overflow:hidden;}
+  .card-header{padding:20px 24px;border-bottom:1px solid #1a1a1a;display:flex;align-items:center;justify-content:space-between;}
+  .card-header h2{font-family:'Bebas Neue',cursive;font-size:1.3rem;letter-spacing:3px;color:var(--text-muted);}
+  table{width:100%;border-collapse:collapse;}
+  th{padding:12px 24px;text-align:left;font-size:0.75rem;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;border-bottom:1px solid #1a1a1a;}
+  td{padding:16px 24px;border-bottom:1px solid #111;vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:rgba(255,255,255,0.02);}
+  .product-thumb{width:48px;height:48px;border-radius:8px;object-fit:cover;background:#222;display:inline-flex;align-items:center;justify-content:center;font-size:1.2rem;vertical-align:middle;}
+  .product-thumb img{width:100%;height:100%;border-radius:8px;object-fit:cover;}
+  .price-badge{font-family:'Bebas Neue',cursive;font-size:1.1rem;color:var(--blue-light);letter-spacing:1px;}
+  .action-btns{display:flex;gap:8px;}
+  .empty-table{text-align:center;padding:48px;color:var(--text-muted);}
+  .empty-table .icon{font-size:3rem;margin-bottom:12px;}
+
+  /* MODAL */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);
+    z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;
+    opacity:0;pointer-events:none;transition:opacity 0.3s;
+  }
+  .modal-overlay.open{opacity:1;pointer-events:all;}
+  .modal{
+    background:linear-gradient(145deg,#111,#1a1a1a);
+    border:1px solid #2a2a2a;border-radius:20px;
+    padding:32px 28px;width:100%;max-width:500px;
+    box-shadow:0 30px 80px rgba(0,0,0,0.8);
+    transform:translateY(20px);transition:transform 0.3s;
+    max-height:90vh;overflow-y:auto;
+  }
+  .modal-overlay.open .modal{transform:translateY(0);}
+  .modal h3{font-family:'Bebas Neue',cursive;font-size:1.8rem;letter-spacing:3px;color:var(--blue-light);margin-bottom:24px;}
+  .form-group{margin-bottom:18px;}
+  .form-group label{display:block;font-size:0.8rem;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px;}
+  .form-group input,.form-group textarea,.form-group select{
+    width:100%;background:#0a0a0a;border:1px solid #333;border-radius:10px;
+    padding:12px 14px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.95rem;
+    outline:none;transition:border-color 0.2s;
+  }
+  .form-group input:focus,.form-group textarea:focus{border-color:var(--blue);}
+  .form-group textarea{resize:vertical;min-height:80px;}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .modal-actions{display:flex;gap:12px;margin-top:24px;}
+  .modal-cancel{flex:1;padding:14px;background:none;border:1px solid #333;border-radius:10px;color:var(--text-muted);font-family:'DM Sans',sans-serif;font-size:0.9rem;cursor:pointer;transition:all 0.2s;}
+  .modal-cancel:hover{border-color:#555;color:#fff;}
+  .modal-confirm{flex:2;padding:14px;background:linear-gradient(135deg,var(--blue-dark),var(--blue));border:none;border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:600;cursor:pointer;transition:all 0.2s;text-transform:uppercase;letter-spacing:1px;}
+  .modal-confirm:hover{opacity:0.85;}
+  .modal-confirm:disabled{opacity:0.4;cursor:not-allowed;}
+
+  /* IMAGE UPLOAD */
+  .img-upload-area{
+    border:2px dashed #333;border-radius:12px;padding:24px;
+    text-align:center;cursor:pointer;transition:all 0.2s;
+    position:relative;
+  }
+  .img-upload-area:hover{border-color:var(--blue);background:rgba(0,121,176,0.05);}
+  .img-upload-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;}
+  .img-upload-area .upload-icon{font-size:2rem;margin-bottom:8px;}
+  .img-upload-area p{font-size:0.85rem;color:var(--text-muted);}
+  .img-preview{width:100%;height:140px;object-fit:cover;border-radius:10px;margin-top:12px;display:none;}
+  .img-preview.show{display:block;}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:24px;right:24px;background:linear-gradient(135deg,#0079b0,#005a82);color:#fff;padding:12px 20px;border-radius:12px;font-size:0.9rem;font-weight:500;z-index:999;opacity:0;transform:translateY(20px);transition:all 0.3s;pointer-events:none;}
+  .toast.show{opacity:1;transform:translateY(0);}
+  .toast.error{background:linear-gradient(135deg,#7f1d1d,#ef4444);}
+
+  /* LOGIN */
+  .login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+  .login-box{background:linear-gradient(145deg,#111,#1a1a1a);border:1px solid #222;border-radius:20px;padding:40px 32px;width:100%;max-width:380px;text-align:center;}
+  .login-box h2{font-family:'Bebas Neue',cursive;font-size:2rem;letter-spacing:4px;color:var(--blue-light);margin-bottom:8px;}
+  .login-box p{font-size:0.85rem;color:var(--text-muted);margin-bottom:24px;}
+  .login-box input{width:100%;background:#0a0a0a;border:1px solid #333;border-radius:10px;padding:13px 16px;color:#fff;font-family:'DM Sans',sans-serif;font-size:1rem;outline:none;margin-bottom:12px;transition:border-color 0.2s;}
+  .login-box input:focus{border-color:var(--blue);}
+  .login-box button{width:100%;padding:14px;background:linear-gradient(135deg,var(--blue-dark),var(--blue));border:none;border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:600;cursor:pointer;}
+  .login-box button:hover{opacity:0.85;}
+  #appContent{display:none;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <h2>Admin Login</h2>
+    <p>Products Management Panel</p>
+    <input type="password" id="adminPass" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <button onclick="doLogin()">Sign In →</button>
+  </div>
+</div>
+
+<div id="appContent">
+<div class="layout">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-logo">🏷️ GS Admin</div>
+    <div class="sidebar-label">Navigation</div>
+    <a href="admin-products.html" class="sidebar-link active">📦 Products</a>
+    <a href="admin-orders.html" class="sidebar-link">🧾 Orders</a>
+    <a href="index.html" class="sidebar-link" target="_blank">🛍️ View Store</a>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <h1>Products</h1>
+      <button class="btn btn-primary" onclick="openAddModal()">+ Add Product</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-label">Total Products</div>
+        <div class="stat-val" id="statTotal">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Avg Price</div>
+        <div class="stat-val" id="statAvg">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Value</div>
+        <div class="stat-val" id="statValue">—</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h2>All Products</h2>
+        <button class="btn btn-ghost btn-sm" onclick="loadProducts()">↻ Refresh</button>
+      </div>
+      <div id="tableContainer">
+        <table>
+          <thead><tr>
+            <th>Image</th><th>Name</th><th>Description</th><th>Price</th><th>Stock</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="productsTableBody">
+            <tr><td colspan="6"><div class="empty-table"><div class="icon">⏳</div><p>Loading...</p></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="productModal">
+  <div class="modal">
+    <h3 id="modalTitle">Add Product</h3>
+    <div class="form-group">
+      <label>Product Name *</label>
+      <input type="text" id="pName" placeholder="e.g. Vintage Lamp" maxlength="80"/>
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea id="pDesc" placeholder="Short description of the item..."></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Price ($) *</label>
+        <input type="number" id="pPrice" placeholder="0.00" min="0" step="0.01"/>
+      </div>
+      <div class="form-group">
+        <label>Stock Qty</label>
+        <input type="number" id="pStock" placeholder="Leave blank = unlimited" min="0"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Product Image</label>
+      <div class="img-upload-area" id="uploadArea">
+        <input type="file" id="pImageFile" accept="image/*" onchange="previewImage(event)"/>
+        <div class="upload-icon">📷</div>
+        <p>Click or drag to upload image</p>
+      </div>
+      <img class="img-preview" id="imgPreview" alt="preview"/>
+      <input type="hidden" id="pImageUrl"/>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-confirm" id="saveBtn" onclick="saveProduct()">Save Product</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+const ADMIN_PASSWORD = "garagesale2024"; // Change this!
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBktRoKG3ELj4Gr3AWPZpD0AErIRm2R-WU",
+  authDomain: "gargesale-38b84.firebaseapp.com",
+  projectId: "gargesale-38b84",
+  storageBucket: "gargesale-38b84.firebasestorage.app",
+  messagingSenderId: "915741327833",
+  appId: "1:915741327833:web:7be10523abb0eba0dd59c8",
+  measurementId: "G-K53XJXMXNE"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const db = getFirestore(fbApp);
+const storage = getStorage(fbApp);
+
+let products = [];
+let editingId = null;
+let uploadedImageUrl = null;
+let previewBlob = null;
+
+window.doLogin = function() {
+  const pass = document.getElementById("adminPass").value;
+  if (pass === ADMIN_PASSWORD) {
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("appContent").style.display = "block";
+    loadProducts();
+  } else {
+    showToast("Wrong password", true);
+  }
+};
+
+window.loadProducts = async function() {
+  try {
+    const snap = await getDocs(collection(db, "products"));
+    products = [];
+    snap.forEach(d => products.push({ id: d.id, ...d.data() }));
+    renderTable();
+    updateStats();
+  } catch(e) { showToast("Failed to load products", true); }
+};
+
+function renderTable() {
+  const tbody = document.getElementById("productsTableBody");
+  if (!products.length) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-table"><div class="icon">📦</div><p>No products yet. Click + Add Product to get started.</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = products.map(p => `
+    <tr>
+      <td>
+        ${p.imageUrl ? `<img class="product-thumb" src="${p.imageUrl}" alt="${p.name}"/>` : `<div class="product-thumb">🏷️</div>`}
+      </td>
+      <td><strong>${p.name}</strong></td>
+      <td style="color:#777;font-size:0.85rem;max-width:200px;">${p.description || '—'}</td>
+      <td><span class="price-badge">$${parseFloat(p.price).toFixed(2)}</span></td>
+      <td style="color:#888;">${p.stock !== undefined && p.stock !== '' ? p.stock : '∞'}</td>
+      <td>
+        <div class="action-btns">
+          <button class="btn btn-ghost btn-sm" onclick="openEditModal('${p.id}')">✏️ Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteProduct('${p.id}')">🗑️ Delete</button>
+        </div>
+      </td>
+    </tr>`).join("");
+}
+
+function updateStats() {
+  document.getElementById("statTotal").textContent = products.length;
+  const prices = products.map(p => parseFloat(p.price)||0);
+  const avg = prices.length ? (prices.reduce((a,b)=>a+b,0)/prices.length) : 0;
+  const total = prices.reduce((a,b)=>a+b,0);
+  document.getElementById("statAvg").textContent = `$${avg.toFixed(2)}`;
+  document.getElementById("statValue").textContent = `$${total.toFixed(2)}`;
+}
+
+window.openAddModal = function() {
+  editingId = null;
+  uploadedImageUrl = null;
+  previewBlob = null;
+  document.getElementById("modalTitle").textContent = "Add Product";
+  document.getElementById("pName").value = "";
+  document.getElementById("pDesc").value = "";
+  document.getElementById("pPrice").value = "";
+  document.getElementById("pStock").value = "";
+  document.getElementById("pImageUrl").value = "";
+  document.getElementById("pImageFile").value = "";
+  document.getElementById("imgPreview").classList.remove("show");
+  document.getElementById("productModal").classList.add("open");
+};
+
+window.openEditModal = function(id) {
+  editingId = id;
+  const p = products.find(pr => pr.id === id);
+  document.getElementById("modalTitle").textContent = "Edit Product";
+  document.getElementById("pName").value = p.name || "";
+  document.getElementById("pDesc").value = p.description || "";
+  document.getElementById("pPrice").value = p.price || "";
+  document.getElementById("pStock").value = p.stock !== undefined ? p.stock : "";
+  document.getElementById("pImageUrl").value = p.imageUrl || "";
+  uploadedImageUrl = p.imageUrl || null;
+  previewBlob = null;
+  const preview = document.getElementById("imgPreview");
+  if (p.imageUrl) { preview.src = p.imageUrl; preview.classList.add("show"); }
+  else { preview.classList.remove("show"); }
+  document.getElementById("productModal").classList.add("open");
+};
+
+window.closeModal = function() {
+  document.getElementById("productModal").classList.remove("open");
+};
+
+window.previewImage = function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  previewBlob = file;
+  const url = URL.createObjectURL(file);
+  const preview = document.getElementById("imgPreview");
+  preview.src = url;
+  preview.classList.add("show");
+};
+
+window.saveProduct = async function() {
+  const name = document.getElementById("pName").value.trim();
+  const desc = document.getElementById("pDesc").value.trim();
+  const price = parseFloat(document.getElementById("pPrice").value);
+  const stockVal = document.getElementById("pStock").value.trim();
+  const stock = stockVal === "" ? undefined : parseInt(stockVal);
+
+  if (!name || isNaN(price)) { showToast("Name and price are required", true); return; }
+
+  const btn = document.getElementById("saveBtn");
+  btn.disabled = true;
+  btn.textContent = "Saving...";
+
+  try {
+    // Upload image if new one selected
+    let imageUrl = uploadedImageUrl || "";
+    if (previewBlob) {
+      const storageRef = ref(storage, `products/${Date.now()}_${previewBlob.name}`);
+      await uploadBytes(storageRef, previewBlob);
+      imageUrl = await getDownloadURL(storageRef);
+    }
+
+    const data = { name, description: desc, price, imageUrl, updatedAt: serverTimestamp() };
+    if (stock !== undefined) data.stock = stock;
+
+    if (editingId) {
+      await updateDoc(doc(db, "products", editingId), data);
+      showToast("Product updated!");
+    } else {
+      data.createdAt = serverTimestamp();
+      await addDoc(collection(db, "products"), data);
+      showToast("Product added!");
+    }
+
+    closeModal();
+    loadProducts();
+  } catch(e) { showToast("Error saving: " + e.message, true); }
+  finally { btn.disabled = false; btn.textContent = "Save Product"; }
+};
+
+window.deleteProduct = async function(id) {
+  if (!confirm("Delete this product?")) return;
+  try {
+    await deleteDoc(doc(db, "products", id));
+    showToast("Product deleted");
+    loadProducts();
+  } catch(e) { showToast("Error deleting", true); }
+};
+
+function showToast(msg, isErr=false) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "toast" + (isErr?" error":"");
+  t.classList.add("show");
+  clearTimeout(window._tt);
+  window._tt = setTimeout(() => t.classList.remove("show"), 3000);
+}
+</script>
+</body>
+</html>
