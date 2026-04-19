@@ -672,9 +672,23 @@ window.confirmCheckout = async function() {
     });
   } catch(e) { console.warn("Order save failed:", e); }
 
-  closeModal();
-  const cents = Math.round(total * 100);
-  window.location.href = `${STRIPE_PAYMENT_LINK}?prefilled_amount=${cents}&client_reference_id=${encodeURIComponent(name)}`;
+closeModal();
+
+try {
+  const response = await fetch('/api/checkout', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ items, buyerName: name, note })
+  });
+  const data = await response.json();
+  if (data.url) {
+    window.location.href = data.url;
+  } else {
+    alert('Checkout failed: ' + (data.error || 'Unknown error'));
+  }
+} catch (err) {
+  alert('Could not connect to checkout. Try again.');
+}
 };
 
 function showToast(msg) {
