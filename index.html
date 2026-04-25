@@ -497,6 +497,7 @@
     <h3>Almost There!</h3>
     <p>Enter your name so we know who placed this order when you come to pick up your items.</p>
     <input type="text" id="buyerName" placeholder="Your full name" maxlength="60"/>
+    <input type="email" id="buyerEmail" placeholder="Your email address (required)" maxlength="120"/>
     <input type="text" id="buyerNote" placeholder="Any notes? (optional)" maxlength="120"/>
     <div class="modal-actions">
       <button class="modal-cancel" onclick="closeModal()">Cancel</button>
@@ -653,6 +654,13 @@ window.closeModal = function() {
 window.confirmCheckout = async function() {
   const name = document.getElementById("buyerName").value.trim();
   if (!name) { document.getElementById("buyerName").focus(); return; }
+  const email = document.getElementById("buyerEmail").value.trim();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    document.getElementById("buyerEmail").focus();
+    document.getElementById("buyerEmail").style.borderColor = "#ef4444";
+    setTimeout(() => document.getElementById("buyerEmail").style.borderColor = "", 2000);
+    return;
+  }
   const note = document.getElementById("buyerNote").value.trim();
 
   const items = Object.entries(cart).map(([id, qty]) => {
@@ -664,6 +672,7 @@ window.confirmCheckout = async function() {
   try {
     await db.collection("orders").add({
       buyerName: name,
+      buyerEmail: email,
       note: note || "",
       items,
       total: +total.toFixed(2),
@@ -678,7 +687,7 @@ try {
   const response = await fetch('/api/checkout', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ items, buyerName: name, note })
+    body: JSON.stringify({ items, buyerName: name, buyerEmail: email, note })
   });
   const data = await response.json();
   if (data.url) {
